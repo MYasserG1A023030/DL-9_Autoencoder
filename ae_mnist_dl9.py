@@ -7,13 +7,10 @@ Cara pakai:
     python ae_mnist_dl9.py
 
 Output (folder ./hasil_ae):
-    konfigurasi.csv      -> salin ke sheet "Konfigurasi"
-    hasil_metrik.csv     -> salin ke sheet "Hasil Metrik"
-    history_<RUN>.csv    -> kurva loss per epoch
-    loss_<RUN>.png       -> grafik loss train/val
-    recon_<RUN>.png      -> citra asli vs rekonstruksi (test)
-    perbandingan_run.png -> ringkasan MSE/PSNR/SSIM semua run
-    best_<RUN>.pt        -> bobot terbaik (val loss terendah)
+    metrik/              -> konfigurasi dan metrik evaluasi CSV
+    riwayat/             -> loss train/validasi per epoch
+    grafik/              -> grafik loss, rekonstruksi, dan perbandingan run
+    model/               -> bobot terbaik (val loss terendah)
 """
 import os
 import time
@@ -38,6 +35,12 @@ SEED = 42
 N_PER_CLASS = 500            # 10 kelas x 500 = 5.000 citra
 SPLIT = (0.8, 0.1, 0.1)      # train, val, test
 OUT_DIR = "hasil_ae"
+MODEL_DIR = os.path.join(OUT_DIR, "model")
+METRIC_DIR = os.path.join(OUT_DIR, "metrik")
+HISTORY_DIR = os.path.join(OUT_DIR, "riwayat")
+PLOT_DIR = os.path.join(OUT_DIR, "grafik")
+LOSS_DIR = os.path.join(PLOT_DIR, "loss")
+RECON_DIR = os.path.join(PLOT_DIR, "rekonstruksi")
 DATA_DIR = "data"
 
 RUNS = [
@@ -156,7 +159,7 @@ def run_experiment(cfg, data):
     g = torch.Generator().manual_seed(SEED)
 
     hist, best_val = [], float("inf")
-    best_path = os.path.join(OUT_DIR, f"best_{cfg['run_id']}.pt")
+    best_path = os.path.join(MODEL_DIR, f"best_{cfg['run_id']}.pt")
     t0 = time.time()
     for ep in range(1, cfg["epochs"] + 1):
         model.train()
@@ -184,7 +187,7 @@ def run_experiment(cfg, data):
     m = compute_metrics(xte, xr)
     print(f"[{cfg['run_id']}] TEST: {m}")
 
-    pd.DataFrame(hist).to_csv(os.path.join(OUT_DIR, f"history_{cfg['run_id']}.csv"), index=False)
+    pd.DataFrame(hist).to_csv(os.path.join(HISTORY_DIR, f"history_{cfg['run_id']}.csv"), index=False)
     plot_loss(cfg, hist)
     plot_recon(cfg, xte, xr, yte)
     return model, m, minutes, n_params, len(xte)
@@ -201,7 +204,7 @@ def plot_loss(cfg, hist):
     plt.xlabel("Epoch"); plt.ylabel("MSE"); plt.yscale("log")
     plt.title(f"Kurva loss {cfg['run_id']} (latent={cfg['latent']}, lr={cfg['lr']})")
     plt.legend(); plt.tight_layout()
-    plt.savefig(os.path.join(OUT_DIR, f"loss_{cfg['run_id']}.png"), dpi=200)
+    plt.savefig(os.path.join(LOSS_DIR, f"loss_{cfg['run_id']}.png"), dpi=200)
     plt.close()
 
 
@@ -217,7 +220,7 @@ def plot_recon(cfg, x, xr, y, n=10):
     fig.text(0.005, 0.28, "Rekonstruksi", fontsize=8, rotation=90, va="center")
     plt.suptitle(f"{cfg['run_id']} (latent={cfg['latent']})", fontsize=9)
     plt.tight_layout(rect=(0.02, 0, 1, 1))
-    plt.savefig(os.path.join(OUT_DIR, f"recon_{cfg['run_id']}.png"), dpi=200)
+    plt.savefig(os.path.join(RECON_DIR, f"recon_{cfg['run_id']}.png"), dpi=200)
     plt.close()
 
 
@@ -229,7 +232,7 @@ def plot_summary(df):
             a.text(i, v, f"{v:.4f}" if col != "PSNR (dB)" else f"{v:.2f}",
                    ha="center", va="bottom", fontsize=7)
     plt.tight_layout()
-    plt.savefig(os.path.join(OUT_DIR, "perbandingan_run.png"), dpi=200)
+    plt.savefig(os.path.join(PLOT_DIR, "perbandingan_run.png"), dpi=200)
     plt.close()
 
 
@@ -237,7 +240,8 @@ def plot_summary(df):
 # 7. MAIN
 # ----------------------------------------------------------------------
 def main():
-    os.makedirs(OUT_DIR, exist_ok=True)
+    for output_dir in (MODEL_DIR, METRIC_DIR, HISTORY_DIR, LOSS_DIR, RECON_DIR):
+        os.makedirs(output_dir, exist_ok=True)
     set_seed(SEED)
     data = load_data()
     print("Ukuran split (train/val/test):", [len(d[0]) for d in data])
@@ -277,9 +281,9 @@ def main():
             "Link grafik & citra": "isi tautan", "Catatan": "Satu seed (42)",
         })
 
-    pd.DataFrame(cfg_rows).to_csv(os.path.join(OUT_DIR, "konfigurasi.csv"), index=False)
+    pd.DataFrame(cfg_rows).to_csv(os.path.join(METRIC_DIR, "konfigurasi.csv"), index=False)
     res = pd.DataFrame(res_rows)
-    res.to_csv(os.path.join(OUT_DIR, "hasil_metrik.csv"), index=False)
+    res.to_csv(os.path.join(METRIC_DIR, "hasil_metrik.csv"), index=False)
     plot_summary(res)
     print("\nRingkasan hasil TEST:\n", res[["Run ID", "MSE", "MAE", "PSNR (dB)", "SSIM"]].to_string(index=False))
     print(f"\nSemua file tersimpan di: {os.path.abspath(OUT_DIR)}")

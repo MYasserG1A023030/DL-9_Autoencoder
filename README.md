@@ -51,7 +51,7 @@ Batch size seluruh run adalah 128. Untuk mengubah parameter atau menambah run, e
 
 ## Hasil yang tersedia
 
-Metrik test dari berkas `hasil_ae/hasil_metrik.csv` yang saat ini ada di proyek:
+Metrik test dari berkas `hasil_ae/metrik/hasil_metrik.csv` yang saat ini ada di proyek:
 
 | Run | MSE ↓ | MAE ↓ | PSNR (dB) ↑ | SSIM ↑ |
 | --- | ---: | ---: | ---: | ---: |
@@ -65,22 +65,22 @@ Nilai tersebut berasal dari hasil run yang tersimpan; menjalankan ulang eksperim
 
 Ringkasan grafik metrik:
 
-![Perbandingan metrik antar-run](hasil_ae/perbandingan_run.png)
+![Perbandingan metrik antar-run](hasil_ae/grafik/perbandingan_run.png)
 
 Contoh citra asli dan rekonstruksi untuk AE-02:
 
-![Hasil rekonstruksi AE-02](hasil_ae/recon_AE-02.png)
+![Hasil rekonstruksi AE-02](hasil_ae/grafik/rekonstruksi/recon_AE-02.png)
 
 ## Berkas keluaran
 
-Semuanya dibuat di `hasil_ae/`:
+Semuanya dibuat di `hasil_ae/` dalam folder berikut:
 
-- `konfigurasi.csv` — konfigurasi eksperimen, informasi framework, perangkat keras, dan waktu training.
-- `hasil_metrik.csv` — metrik evaluasi test tiap run.
-- `history_<RUN>.csv` — MSE train dan validasi per epoch.
-- `loss_<RUN>.png` — grafik loss train/validasi.
-- `recon_<RUN>.png` — contoh citra asli dan rekonstruksi test, satu contoh per kelas.
-- `perbandingan_run.png` — ringkasan perbandingan MSE, PSNR, dan SSIM.
-- `best_<RUN>.pt` — bobot model dengan loss validasi terbaik.
+- `metrik/konfigurasi.csv` — konfigurasi eksperimen, informasi framework, perangkat keras, dan waktu training.
+- `metrik/hasil_metrik.csv` — metrik evaluasi test tiap run.
+- `riwayat/history_<RUN>.csv` — MSE train dan validasi per epoch.
+- `grafik/loss/loss_<RUN>.png` — grafik loss train/validasi.
+- `grafik/rekonstruksi/recon_<RUN>.png` — contoh citra asli dan rekonstruksi test, satu contoh per kelas.
+- `grafik/perbandingan_run.png` — ringkasan perbandingan MSE, PSNR, dan SSIM.
+- `model/best_<RUN>.pt` — bobot model dengan loss validasi terbaik.
 
 Metrik yang dihitung: MSE, MAE, PSNR (`MAX=1`), dan SSIM (`data_range=1`).
